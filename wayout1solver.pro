@@ -46,4 +46,5 @@ RESOURCES += \
     res.qrc
 
 DISTFILES += \
-    tips.txt
+    note.txt \
+    README.md
