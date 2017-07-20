@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     tool_actns(this)
 {
     ui->setupUi(this);
+    setWindowTitle("Way Out : Solver");
 
     auto sa = new QScrollArea(this);
     sa->setWidget(takeCentralWidget());
@@ -46,11 +47,17 @@ void MainWindow::initToolBar()
         //-- resource ----- | -- text ----- | -- status tip ----- | -- block type ----- |
         ":/img/rawblock",     "简单块",          "放置简单块",          RAW,
         ":/img/hdblock",      "水平有向块",       "放置水平有向块",      H_DIR,
-        ":/img/vdblock",      "垂直有向块",       "放置垂直有向块",      V_DIR,
-        ":/img/outblock",     "圆心块",          "放置圆心块",          OUT,
+    #ifdef VERSION2
+        ":/img/addblock2",     "传递块",          "放置传递块",          ADD,
+        ":/img/ludblock",     "左上方向块",       "放置左上方向块",      LU_DIR,
+        ":/img/rudblock",     "右上方向块",       "放置右上方向块",      RU_DIR,
+    #else
         ":/img/addblock",     "传递块",          "放置传递块",          ADD,
-        ":/img/dpblock",      "双点块",          "放置双点块",          DPOINT,
+        ":/img/vdblock",      "垂直有向块",       "放置垂直有向块",      V_DIR,
+    #endif
         ":/img/ylblock",      "黄色块",          "放置黄色块",          YELLOW,
+        ":/img/outblock",     "圆心块",          "放置圆心块",          OUT,
+        ":/img/dpblock",      "双点块",          "放置双点块",          DPOINT,
         // 在上面添加方块类型
         ":/img/color",        "着色",            "给方块着色",         COLOR,
         ":/img/delete",       "删除",            "删除方块",           EMPTY,

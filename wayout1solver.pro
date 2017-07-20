@@ -43,8 +43,13 @@ FORMS += \
 QMAKE_CXXFLAGS += -Wno-sign-compare
 
 RESOURCES += \
-    res.qrc
+    res/res.qrc
+
+RC_FILE += \
+    res/appicon.rc
+
 
 DISTFILES += \
     note.txt \
-    README.md
+    README.md \
+    res/appicon.rc

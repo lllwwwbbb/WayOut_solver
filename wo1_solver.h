@@ -3,7 +3,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <QPainter>
 #include "common.h"
 #include "mod2_equations.h"
 using namespace std;
@@ -28,8 +27,8 @@ struct Position {
 };
 enum class ClickType { SINGLE, DOUBLE, DBFIRST, FIRST };
 struct ClickPos {
-    ClickPos(const Position& p = Position(), const ClickType c = ClickType::SINGLE):
-        pos(p), ct(c)
+    ClickPos(const Position& p = Position(), const ClickType ct = ClickType::SINGLE):
+        pos(p), ct(ct)
     {}
     bool operator == (const Position& p) const {
         return pos == p;
@@ -44,8 +43,10 @@ class WO1_Solver
 public:
     WO1_Solver(int h, int w);
     void setBlock(BlockType bt, int x, int y);
-    void enableSolution(bool ss);
-    void paintState(QPainter& p);
+    bool enableSolution(bool ss = true);
+    BlockType getState(int r, int c);
+    bool getColor(int r, int c);
+    const vector<ClickPos> getSolution();
 private:
     int h, w;
     vector<vector<BlockType> > state;
@@ -55,10 +56,8 @@ private:
     map<Position, int> pos2i;
     map<int, Position> i2pos;
     vector<Position> dp_blocks;
-    map<BlockType, QString> bt2res;
-    map<ClickType, QString> ct2res;
 
-    void getSolution();
+    bool cmptSolution();
     vector<vector<ClickPos> > getResult(bool dpc);
     void checkYellow(vector<vector<ClickPos> >& res);
     vector<Position> getAloneYl(const vector<ClickPos>& r);

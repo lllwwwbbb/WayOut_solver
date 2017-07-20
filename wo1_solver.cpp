@@ -1,8 +1,5 @@
 #include "wo1_solver.h"
 #include <QDebug>
-#include <QString>
-#include <QMessageBox>
-#include <QPixmap>
 #include <cassert>
 
 WO1_Solver::WO1_Solver(int h, int w):
@@ -12,21 +9,6 @@ WO1_Solver::WO1_Solver(int h, int w):
         color.push_back(vector<bool>(w, false));
         state.push_back(vector<BlockType>(w, EMPTY));
     }
-    bt2res.insert({
-                      {RAW,        ":/img/rawblock"},
-                      {H_DIR,      ":/img/hdblock"},
-                      {V_DIR,      ":/img/vdblock"},
-                      {OUT,        ":/img/outblock"},
-                      {ADD,        ":/img/addblock"},
-                      {YELLOW,     ":/img/ylblock"},
-                      {DPOINT,     ":/img/dpblock"},
-                  });
-    ct2res.insert({
-                      {ClickType::SINGLE,   ":/img/click"},
-                      {ClickType::DOUBLE,   ":/img/dclick"},
-                      {ClickType::DBFIRST,  ":/img/dfclick"},
-                      {ClickType::FIRST,    ":/img/fclick"},
-                  });
 }
 
 void WO1_Solver::setBlock(BlockType bt, int x, int y)
@@ -44,10 +26,11 @@ void WO1_Solver::setBlock(BlockType bt, int x, int y)
     }
 }
 
-void WO1_Solver::enableSolution(bool ss)
+bool WO1_Solver::enableSolution(bool ss)
 {
+    bool ok = true;
     if (!this->ss && ss) {
-        getSolution();
+        ok = cmptSolution();
         this->ss = ss;
     }
     else if (this->ss && !ss) {
@@ -56,30 +39,25 @@ void WO1_Solver::enableSolution(bool ss)
         i2pos.clear();
         this->ss = ss;
     }
+    return ok;
 }
 
-void WO1_Solver::paintState(QPainter &p)
+BlockType WO1_Solver::getState(int r, int c)
 {
-    for (int r = 0; r < h; r ++) {
-        for (int c = 0; c < w; c ++) {
-            if (state[r][c] != EMPTY) {
-                QString res = bt2res[state[r][c]];
-                if (color[r][c]) {
-                    res += "_color";
-                }
-                int dx = c * B_LEN + PAD, dy = r * B_LEN + PAD;
-                p.drawPixmap(dx, dy, B_LEN -  2 * PAD, B_LEN - 2 * PAD, QPixmap(res));
-            }
-        }
-    }
-    for (int i = 0; i < sltn.size(); i ++) {
-        QString cres = ct2res[sltn[i].ct];
-        int dx = sltn[i].pos.x * B_LEN + PAD, dy = sltn[i].pos.y * B_LEN + PAD;
-        p.drawPixmap(dx, dy, B_LEN -  2 * PAD, B_LEN - 2 * PAD, QPixmap(cres));
-    }
+    return state[r][c];
 }
 
-void WO1_Solver::getSolution()
+bool WO1_Solver::getColor(int r, int c)
+{
+    return color[r][c];
+}
+
+const vector<ClickPos> WO1_Solver::getSolution()
+{
+    return sltn;
+}
+
+bool WO1_Solver::cmptSolution()
 {
     int idx = 0;
     bool dpc;
@@ -112,8 +90,7 @@ void WO1_Solver::getSolution()
     checkYellow(res);
     dp_blocks.clear();
     if (res.size() == 0) {
-        QMessageBox::information(NULL, "无解","没有找到解决方案",QMessageBox::Yes);
-        return;
+        return false;
     }
     auto f_cnt = [res](int i) -> int {
         return count_if(res[i].begin(), res[i].end(), [](ClickPos m) -> bool {
@@ -129,6 +106,7 @@ void WO1_Solver::getSolution()
         }
     }
     sltn = res[mi];
+    return true;
 }
 
 vector<vector<ClickPos> > WO1_Solver::getResult(bool dpc)
@@ -315,6 +293,10 @@ void WO1_Solver::getNH(const Position &pos, set<Position> &ps, BlockType bt)
         {pos.x + 1, pos.y},
         {pos.x, pos.y - 1},
         {pos.x, pos.y + 1},
+    #ifdef VERSION2
+        {(pos.y % 2 == 0 ? pos.x + 1 : pos.x - 1), pos.y - 1},
+        {(pos.y % 2 == 0 ? pos.x + 1 : pos.x - 1), pos.y + 1},
+    #endif
     };
     for (auto ap : arr) {
         if (ap.y >= 0 && ap.y < h
@@ -332,11 +314,26 @@ void WO1_Solver::getNH(const Position &pos, set<Position> &ps, BlockType bt)
                     ps.insert(ap);
                 }
                 break;
+#ifndef VERSION2
             case V_DIR:
                 if (ap.x == pos.x) {
                     ps.insert(ap);
                 }
                 break;
+#else
+            case LU_DIR:
+                if ((ap.y < pos.y && (pos.y % 2) == (pos.x - ap.x))
+                        || (ap.y > pos.y && (pos.y % 2) + (ap.x - pos.x) == 1)) {
+                    ps.insert(ap);
+                }
+                break;
+            case RU_DIR:
+                if ((ap.y < pos.y && (pos.y % 2) + (ap.x - pos.x) == 1)
+                        || (ap.y > pos.y && (pos.y % 2) == (pos.x - ap.x))) {
+                    ps.insert(ap);
+                }
+                break;
+#endif
             case ADD:
                 if (ps.insert(ap).second) {
                     getNH(ap, ps);
